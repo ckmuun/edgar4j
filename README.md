@@ -22,7 +22,7 @@ Add the following dependency to your Maven `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>de.koware</groupId>
+    <groupId>io.github.ckmuun</groupId>
     <artifactId>edgar4j</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
@@ -33,7 +33,7 @@ Add the following dependency to your Maven `pom.xml`:
 ### Basic Usage
 
 ```java
-import de.koware.edgar4j.EdgarService;
+import io.github.ckmuun.edgar4j.EdgarService;
 
 public class Example {
     public static void main(String[] args) {
@@ -119,7 +119,7 @@ EdgarService service = new EdgarService("your-email@example.com");
 If you need custom WebClient configuration:
 
 ```java
-import de.koware.edgar4j.EdgarWebClientFactory;
+import io.github.ckmuun.edgar4j.EdgarWebClientFactory;
 import org.springframework.web.reactive.function.client.WebClient;
 
 WebClient customClient = EdgarWebClientFactory.createWebClient("your-email@example.com");
