@@ -3,6 +3,7 @@ package io.github.ckmuun.edgar4j;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -17,6 +18,7 @@ import static io.github.ckmuun.edgar4j.EdgarConstants.*;
 /**
  * Service for downloading company data and filings from SEC EDGAR API.
  */
+@Slf4j
 public class EdgarDownloadService {
 
     private final WebClient webClient;
@@ -54,6 +56,7 @@ public class EdgarDownloadService {
      * @return Flux of CompanyTickerDto objects
      */
     public Flux<CompanyTickerDto> getCompanyTickers() {
+        log.info("Fetching company tickers...");
         return webClient.get()
                 .uri(SEC_BASE + TICKER_FILE_PATH)
                 .retrieve()
@@ -174,7 +177,7 @@ public class EdgarDownloadService {
 
     protected List<CompanyTickerDto> parseCompanyTickerDtos(String rawResponse) {
         try {
-            JsonNode root = objectMapper.readTree(rawResponse);
+            JsonNode root = objectMapper.readTree(sanitizeRawResponse(rawResponse));
             JsonNode dataArray = root.path("data");
 
             List<CompanyTickerDto> result = new ArrayList<>();
@@ -189,6 +192,11 @@ public class EdgarDownloadService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse company tickers response", e);
         }
+    }
+
+    protected String sanitizeRawResponse(String rawResponse) {
+        rawResponse = rawResponse.trim();
+        return rawResponse.replaceAll("\\s+", " ");
     }
     /*
         The tickers come as valid, but rather strangely formatted JSON.

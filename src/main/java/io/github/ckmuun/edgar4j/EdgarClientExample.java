@@ -14,7 +14,7 @@ public class EdgarClientExample {
 
     public static void main(String[] args) {
         // For production use, replace with a real email address
-        String userAgent = "your-email@example.com";
+        String userAgent = "a.b@.com";
         EdgarService edgarService = new EdgarService(userAgent);
 
         // Example 1: Get company tickers

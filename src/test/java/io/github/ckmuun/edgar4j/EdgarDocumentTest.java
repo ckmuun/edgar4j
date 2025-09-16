@@ -19,11 +19,6 @@ class EdgarDocumentTest {
     }
 
     @Test
-    void some_fail() {
-        assert false;
-    }
-
-    @Test
     void testConstructorWithContentAndMetadata() {
         String content = "Test document content";
         Map<String, Object> metadata = Map.of(

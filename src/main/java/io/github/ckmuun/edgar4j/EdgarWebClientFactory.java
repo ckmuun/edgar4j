@@ -7,7 +7,6 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 public final class EdgarWebClientFactory {
     
-    private static final String ACCEPT_ENCODING = "gzip, deflate";
     private static final String DEFAULT_USER_AGENT = "edgar-client-library/1.0";
     
     private EdgarWebClientFactory() {
@@ -32,7 +31,7 @@ public final class EdgarWebClientFactory {
     public static WebClient createWebClient(String userAgent) {
         return WebClient.builder()
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(20 * 1024 * 1024)) // 20 MB
-                .defaultHeader("Accept-Encoding", ACCEPT_ENCODING)
+                // Do not set Accept-Encoding manually; let the client handle compression negotiation and auto-decompression
                 .defaultHeader("User-Agent", userAgent)
                 .defaultHeader("Accept-Charset", "UTF-8")
                 .build();
