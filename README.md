@@ -1,4 +1,4 @@
-# Edgar4j
+# [WIP] Edgar4j
 
 A standalone Java library for accessing and parsing SEC EDGAR data. This library provides a simple API to download company filings, parse them into structured documents, and work with SEC data programmatically.
 
