@@ -1,12 +1,12 @@
 # [WIP] Edgar4j
 
-A standalone Java library for accessing and parsing SEC EDGAR data. This library provides a simple API to download company filings, parse them into structured documents, and work with SEC data programmatically.
+A standalone Java library for accessing and parsing SEC EDGAR data. This library provides a simple API to download company filings, parse them into structured documentChunks, and work with SEC data programmatically.
 
 ## Features
 
 - **Company Data Access**: Retrieve company tickers, CIKs, and basic company information
 - **Filing Download**: Download SEC filings (10-K forms currently supported) 
-- **Document Parsing**: Parse HTML filings into structured documents with metadata
+- **Document Parsing**: Parse HTML filings into structured documentChunks with metadata
 - **Reactive API**: Built on Spring WebFlux for non-blocking, reactive operations
 - **Standalone**: No Spring Boot required - works in any Java application
 - **Easy Integration**: Simple API that can be embedded in existing applications
@@ -48,9 +48,9 @@ public class Example {
         
         // Download and parse latest 10-K for Apple
         edgarService.loadLatest10KForTicker("AAPL")
-            .subscribe(documents -> {
-                System.out.println("Parsed " + documents.size() + " documents");
-                documents.forEach(doc -> 
+            .subscribe(documentChunks -> {
+                System.out.println("Parsed " + documentChunks.size() + " documentChunks");
+                documentChunks.forEach(doc -> 
                     System.out.println("Type: " + doc.getMetadata().get("documentType")));
             });
     }
@@ -69,12 +69,12 @@ edgarService.getFilingsByTicker("MSFT")
 
 // Download specific filing
 edgarService.downloadAndParseFiling(filingMetadata)
-    .subscribe(documents -> {
-        // Process parsed documents
-        documents.forEach(doc -> {
+    .subscribe(documentChunks -> {
+        // Process parsed documentChunks
+        documentChunks.forEach(doc -> {
             String content = doc.getContent();
             Map<String, Object> metadata = doc.getMetadata();
-            // Work with document content and metadata
+            // Work with documentChunk content and metadata
         });
     });
 ```
@@ -85,8 +85,8 @@ edgarService.downloadAndParseFiling(filingMetadata)
 
 - **`EdgarService`**: Main service for high-level operations
 - **`EdgarDownloadService`**: Low-level service for downloading SEC data  
-- **`EdgarParsingService`**: Service for parsing SEC filings into documents
-- **`EdgarDocument`**: Represents a parsed document with content and metadata
+- **`EdgarParsingService`**: Service for parsing SEC filings into documentChunks
+- **`EdgarDocument`**: Represents a parsed documentChunk with content and metadata
 
 ### Data Classes
 
@@ -119,17 +119,17 @@ EdgarService service = new EdgarService("your-email@example.com");
 If you need custom WebClient configuration:
 
 ```java
-import io.github.ckmuun.edgar4j.EdgarWebClientFactory;
+import io.github.ckmuun.edgar4j.WebClientFactory;
 import org.springframework.web.reactive.function.client.WebClient;
 
-WebClient customClient = EdgarWebClientFactory.createWebClient("your-email@example.com");
+WebClient customClient = WebClientFactory.createWebClient("your-email@example.com");
 EdgarDownloadService downloadService = new EdgarDownloadService(customClient);
 EdgarService service = new EdgarService(downloadService, new EdgarParsingService());
 ```
 
 ## Document Structure
 
-Parsed documents include:
+Parsed documentChunks include:
 
 ### Metadata
 - `cik`: Company Central Index Key
@@ -153,7 +153,7 @@ The library uses reactive error handling. Common errors:
 ```java
 edgarService.loadLatest10KForTicker("INVALID")
     .subscribe(
-        documents -> System.out.println("Success"),
+        documentChunks -> System.out.println("Success"),
         error -> System.err.println("Error: " + error.getMessage())
     );
 ```

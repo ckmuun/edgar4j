@@ -3,7 +3,6 @@ package io.github.ckmuun.edgar4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 
 /**
  * Example usage of the Edgar4j Library.
@@ -36,24 +35,27 @@ public class EdgarClientExample {
         // Example 3: Download and parse the latest 10-K for Apple
         log.info("Downloading and parsing latest 10-K for {}...", ticker);
         try {
-            List<EdgarDocument> documents = edgarService.loadLatest10KForTicker(ticker)
+            Document document = edgarService.loadLatest10KForTicker(ticker)
                     .block(); // Block for demo purposes
 
-            if (documents != null) {
-                log.info("Successfully parsed {} documents from the 10-K filing", documents.size());
-                
-                // Print information about each document
-                for (int i = 0; i < Math.min(3, documents.size()); i++) {
-                    EdgarDocument doc = documents.get(i);
-                    log.info("Document {}: {} characters, type: {}", 
-                        i + 1, 
-                        doc.getContent().length(),
-                        doc.getMetadata().get("documentType"));
-                    
-                    // Print first 200 characters of content
-                    String preview = doc.getContent().length() > 200 
-                        ? doc.getContent().substring(0, 200) + "..." 
-                        : doc.getContent();
+            if (document != null) {
+                var chunks = document.getChunks();
+                log.info("Successfully parsed {} chunks from the 10-K filing", chunks.size());
+
+                // Print information about first few chunks
+                for (int i = 0; i < Math.min(3, chunks.size()); i++) {
+                    DocumentChunk chunk = chunks.get(i);
+                    int contentLength = chunk.getContent() == null ? 0 : chunk.getContent().length();
+                    log.info("Chunk {}: {} characters, type: {}",
+                            i + 1,
+                            contentLength,
+                            chunk.getMetadata().get("documentType"));
+
+                    // Print first 200 characters of chunk content
+                    String content = chunk.getContent() == null ? "" : chunk.getContent();
+                    String preview = content.length() > 200
+                            ? content.substring(0, 200) + "..."
+                            : content;
                     log.info("Content preview: {}", preview.replaceAll("\\s+", " "));
                 }
             }

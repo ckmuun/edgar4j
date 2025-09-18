@@ -1,12 +1,10 @@
 package io.github.ckmuun.edgar4j;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -14,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EdgarParsingServiceTest {
 
-    private EdgarParsingService parsingService;
+    private ParsingService parsingService;
 
     @BeforeEach
     void setUp() {
-        parsingService = new EdgarParsingService();
+        parsingService = new ParsingService();
     }
 
     @Test
@@ -36,8 +34,8 @@ class EdgarParsingServiceTest {
             </html>
             """;
 
-        Document doc = Jsoup.parse(htmlContent);
-        Document stripped = parsingService.stripFormHtml(doc);
+        org.jsoup.nodes.Document doc = Jsoup.parse(htmlContent);
+        org.jsoup.nodes.Document stripped = parsingService.stripFormHtml(doc);
 
         // Style and colspan attributes should be removed
         assertFalse(stripped.html().contains("style="));
@@ -66,7 +64,7 @@ class EdgarParsingServiceTest {
             </html>
             """;
 
-        Document doc = Jsoup.parse(htmlWithXbrl);
+        org.jsoup.nodes.Document doc = Jsoup.parse(htmlWithXbrl);
         byte[] xbrlHeader = parsingService.getXbrlHeader(doc);
 
         // XBRL header should be extracted
@@ -95,19 +93,20 @@ class EdgarParsingServiceTest {
             </html>
             """;
 
-        Document doc = Jsoup.parse(htmlContent);
+        org.jsoup.nodes.Document doc = Jsoup.parse(htmlContent);
         Pattern pattern = Pattern.compile("^Item\\s+[0-9][0-9]?[A-C]?.?\\s+.*$");
         Map<String, Object> metadata = Map.of("form", "10-K");
 
-        List<EdgarDocument> documents = parsingService.getFormItemsFromHtml(doc, pattern, metadata);
+        var documents = parsingService.getFormItemsFromHtml(doc, pattern, metadata);
 
         // Should extract 3 items
         assertEquals(3, documents.size());
 
         // Check first document
-        EdgarDocument firstDoc = documents.getFirst();
-        assertTrue(firstDoc.getContent().contains("Item 1. Business"));
-        assertTrue(firstDoc.getContent().contains("business section content"));
+        var firstDoc = documents.getFirst();
+        var firstContent = firstDoc.getContent();
+        assertTrue(firstContent.contains("Item 1. Business"));
+        assertTrue(firstContent.contains("business section content"));
         assertEquals("FORM_ITEM", firstDoc.getMetadata().get("documentType"));
         assertEquals(0, firstDoc.getMetadata().get("itemIndex"));
         assertEquals("Item 1. Business", firstDoc.getMetadata().get("itemTitle"));
@@ -117,7 +116,7 @@ class EdgarParsingServiceTest {
     }
 
     @Test
-    void testConvertEdgarFormToDocuments() {
+    void testConvertEdgarFormToDocument() {
         String htmlContent = """
             <html>
                 <ix:header>
@@ -146,13 +145,14 @@ class EdgarParsingServiceTest {
                 new ByteArrayInputStream(htmlContent.getBytes())
         );
 
-        List<EdgarDocument> documents = parsingService.convertEdgarFormToDocuments(filing);
+        var document = parsingService.convertEdgarFormToDocument(filing);
+        var documents = document.getChunks();
 
         // Should have XBRL header + form items
         assertTrue(documents.size() >= 2);
 
         // First document should be XBRL header
-        EdgarDocument xbrlDoc = documents.getFirst();
+        var xbrlDoc = documents.getFirst();
         assertEquals("XBRL_HEADER", xbrlDoc.getMetadata().get("documentType"));
         assertTrue(xbrlDoc.getContent().contains("XBRL data"));
 
@@ -162,7 +162,7 @@ class EdgarParsingServiceTest {
         assertTrue(hasFormItems);
 
         // Check metadata propagation
-        EdgarDocument formItem = documents.stream()
+        var formItem = documents.stream()
                 .filter(doc -> "FORM_ITEM".equals(doc.getMetadata().get("documentType")))
                 .findFirst()
                 .orElseThrow();
@@ -185,7 +185,7 @@ class EdgarParsingServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> parsingService.convertEdgarFormToDocuments(filing)
+                () -> parsingService.convertEdgarFormToDocument(filing)
         );
 
         assertTrue(exception.getMessage().contains("Currently only 10-K forms supported"));

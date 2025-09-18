@@ -12,13 +12,13 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.ckmuun.edgar4j.EdgarConstants.*;
+import static io.github.ckmuun.edgar4j.Constants.*;
 
 /**
  * Service for downloading company data and filings from SEC EDGAR API.
  */
 @Slf4j
-public class EdgarDownloadService {
+public class DownloadService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -28,7 +28,7 @@ public class EdgarDownloadService {
      * 
      * @param webClient WebClient instance configured for SEC access
      */
-    public EdgarDownloadService(WebClient webClient) {
+    public DownloadService(WebClient webClient) {
         this.webClient = webClient;
     }
 
@@ -36,8 +36,8 @@ public class EdgarDownloadService {
      * Creates a new EdgarDownloadService with a default WebClient.
      * Note: For production use, provide a user agent with a real email address.
      */
-    public EdgarDownloadService() {
-        this(EdgarWebClientFactory.createWebClient());
+    public DownloadService() {
+        this(WebClientFactory.createWebClient());
     }
 
     /**
@@ -45,8 +45,8 @@ public class EdgarDownloadService {
      * 
      * @param userAgent User agent to use (SEC requires real email for production)
      */
-    public EdgarDownloadService(String userAgent) {
-        this(EdgarWebClientFactory.createWebClient(userAgent));
+    public DownloadService(String userAgent) {
+        this(WebClientFactory.createWebClient(userAgent));
     }
 
     /**

@@ -5,11 +5,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class EdgarWebClientFactoryTest {
+class WebClientFactoryTest {
 
     @Test
     void testCreateWebClient_DefaultUserAgent() {
-        WebClient webClient = EdgarWebClientFactory.createWebClient();
+        WebClient webClient = WebClientFactory.createWebClient();
         assertNotNull(webClient);
         // WebClient is properly instantiated
     }
@@ -17,7 +17,7 @@ class EdgarWebClientFactoryTest {
     @Test
     void testCreateWebClient_CustomUserAgent() {
         String userAgent = "test@example.com";
-        WebClient webClient = EdgarWebClientFactory.createWebClient(userAgent);
+        WebClient webClient = WebClientFactory.createWebClient(userAgent);
         assertNotNull(webClient);
         // WebClient is properly instantiated with custom user agent
     }
@@ -25,12 +25,12 @@ class EdgarWebClientFactoryTest {
     @Test
     void testCreateWebClient_NullUserAgent() {
         // Should handle null user agent gracefully
-        assertDoesNotThrow(() -> EdgarWebClientFactory.createWebClient(null));
+        assertDoesNotThrow(() -> WebClientFactory.createWebClient(null));
     }
 
     @Test
     void testCreateWebClient_EmptyUserAgent() {
         // Should handle empty user agent gracefully
-        assertDoesNotThrow(() -> EdgarWebClientFactory.createWebClient(""));
+        assertDoesNotThrow(() -> WebClientFactory.createWebClient(""));
     }
 }

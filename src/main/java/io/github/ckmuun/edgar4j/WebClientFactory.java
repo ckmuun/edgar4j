@@ -5,11 +5,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 /**
  * Factory for creating WebClient instances configured for SEC EDGAR API access.
  */
-public final class EdgarWebClientFactory {
+public final class WebClientFactory {
     
     private static final String DEFAULT_USER_AGENT = "edgar-client-library/1.0";
     
-    private EdgarWebClientFactory() {
+    private WebClientFactory() {
         // Utility class - prevent instantiation
     }
     

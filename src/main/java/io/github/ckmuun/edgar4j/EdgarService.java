@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static io.github.ckmuun.edgar4j.EdgarConstants.TEN_K_FORM;
+import static io.github.ckmuun.edgar4j.Constants.TEN_K_FORM;
 
 /**
  * High-level service that orchestrates Edgar data download and parsing operations.
@@ -14,8 +14,8 @@ import static io.github.ckmuun.edgar4j.EdgarConstants.TEN_K_FORM;
  */
 public class EdgarService {
 
-    private final EdgarDownloadService downloadService;
-    private final EdgarParsingService parsingService;
+    private final DownloadService downloadService;
+    private final ParsingService parsingService;
 
     /**
      * Creates a new EdgarService with the provided services.
@@ -23,7 +23,7 @@ public class EdgarService {
      * @param downloadService Service for downloading SEC data
      * @param parsingService Service for parsing SEC filings
      */
-    public EdgarService(EdgarDownloadService downloadService, EdgarParsingService parsingService) {
+    public EdgarService(DownloadService downloadService, ParsingService parsingService) {
         this.downloadService = downloadService;
         this.parsingService = parsingService;
     }
@@ -34,8 +34,8 @@ public class EdgarService {
      * @param userAgent User agent to use for SEC API requests (should be a real email for production)
      */
     public EdgarService(String userAgent) {
-        this.downloadService = new EdgarDownloadService(userAgent);
-        this.parsingService = new EdgarParsingService();
+        this.downloadService = new DownloadService(userAgent);
+        this.parsingService = new ParsingService();
     }
 
     /**
@@ -43,8 +43,8 @@ public class EdgarService {
      * Note: For production use, provide a real email address as the user agent.
      */
     public EdgarService() {
-        this.downloadService = new EdgarDownloadService();
-        this.parsingService = new EdgarParsingService();
+        this.downloadService = new DownloadService();
+        this.parsingService = new ParsingService();
     }
 
     /**
@@ -53,7 +53,7 @@ public class EdgarService {
      * @param ticker The stock ticker symbol (e.g., "AAPL", "MSFT")
      * @return Mono containing a list of parsed EdgarDocument objects from the latest 10-K filing
      */
-    public Mono<List<EdgarDocument>> loadLatest10KForTicker(String ticker) {
+    public Mono<Document> loadLatest10KForTicker(String ticker) {
         return downloadService
                 .getCompanyTickers()
                 .filter(dto -> dto.ticker().equalsIgnoreCase(ticker))
@@ -62,7 +62,7 @@ public class EdgarService {
                 .filter(filingDto -> filingDto.form().equals(TEN_K_FORM))
                 .take(1) // Get the most recent 10-K
                 .flatMap(downloadService::getCompanyFiling)
-                .map(parsingService::convertEdgarFormToDocuments)
+                .map(parsingService::convertEdgarFormToDocument)
                 .single();
     }
 
@@ -73,14 +73,14 @@ public class EdgarService {
      * @param accessionNumber The specific filing's accession number
      * @return Mono containing a list of parsed EdgarDocument objects
      */
-    public Mono<List<EdgarDocument>> load10KByCikAndAccessionNumber(String cik, String accessionNumber) {
+    public Mono<Document> load10KByCikAndAccessionNumber(String cik, String accessionNumber) {
         return downloadService
                 .getCompanyFilings(cik)
                 .filter(filingDto -> filingDto.accessionNumber().equals(accessionNumber))
                 .filter(filingDto -> filingDto.form().equals(TEN_K_FORM))
                 .take(1)
                 .flatMap(downloadService::getCompanyFiling)
-                .map(parsingService::convertEdgarFormToDocuments)
+                .map(parsingService::convertEdgarFormToDocument)
                 .single();
     }
 
@@ -134,9 +134,9 @@ public class EdgarService {
      * @param metadata The filing metadata
      * @return Mono containing a list of parsed EdgarDocument objects
      */
-    public Mono<List<EdgarDocument>> downloadAndParseFiling(CompanyFilingMetadataDto metadata) {
+    public Mono<Document> downloadAndParseFiling(CompanyFilingMetadataDto metadata) {
         return downloadService
                 .getCompanyFiling(metadata)
-                .map(parsingService::convertEdgarFormToDocuments);
+                .map(parsingService::convertEdgarFormToDocument);
     }
 }
