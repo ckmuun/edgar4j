@@ -39,7 +39,7 @@ public class EdgarClientExample {
                     .block(); // Block for demo purposes
 
             if (document != null) {
-                var chunks = document.getChunks();
+                var chunks = document.chunks();
                 log.info("Successfully parsed {} chunks from the 10-K filing", chunks.size());
 
                 // Print information about first few chunks

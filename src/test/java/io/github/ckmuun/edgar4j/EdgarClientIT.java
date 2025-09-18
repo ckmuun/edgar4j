@@ -40,7 +40,7 @@ public class EdgarClientIT {
         // Example 3: Download and parse the latest 10-K for Apple
         log.info("Downloading and parsing latest 10-K for {}...", ticker);
         Document document = edgarService.loadLatest10KForTicker(ticker).block();
-        var chunks = document.getChunks();
+        var chunks = document.chunks();
         
         Assertions.assertNotNull(chunks, "Parsed chunks should not be null");
         Assertions.assertFalse(chunks.isEmpty(), "Parsed chunks should not be empty");

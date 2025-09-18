@@ -18,17 +18,17 @@ import static io.github.ckmuun.edgar4j.Constants.*;
  * Service for downloading company data and filings from SEC EDGAR API.
  */
 @Slf4j
-public class DownloadService {
+public class FilingService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Creates a new EdgarDownloadService with the provided WebClient.
-     * 
+     *
      * @param webClient WebClient instance configured for SEC access
      */
-    public DownloadService(WebClient webClient) {
+    public FilingService(WebClient webClient) {
         this.webClient = webClient;
     }
 
@@ -36,22 +36,22 @@ public class DownloadService {
      * Creates a new EdgarDownloadService with a default WebClient.
      * Note: For production use, provide a user agent with a real email address.
      */
-    public DownloadService() {
+    public FilingService() {
         this(WebClientFactory.createWebClient());
     }
 
     /**
      * Creates a new EdgarDownloadService with a WebClient using the specified user agent.
-     * 
+     *
      * @param userAgent User agent to use (SEC requires real email for production)
      */
-    public DownloadService(String userAgent) {
+    public FilingService(String userAgent) {
         this(WebClientFactory.createWebClient(userAgent));
     }
 
     /**
      * Retrieves all company tickers from SEC.
-     * 
+     *
      * @return Flux of CompanyTickerDto objects
      */
     public Flux<CompanyTickerDto> getCompanyTickers() {
@@ -65,7 +65,7 @@ public class DownloadService {
 
     /**
      * Retrieves filings for a specific company by CIK.
-     * 
+     *
      * @param cik Company CIK (Central Index Key)
      * @return Flux of CompanyFilingMetadataDto objects
      */
@@ -75,12 +75,12 @@ public class DownloadService {
                 .uri(SEC_BASE_DATA + "/submissions/CIK{cik}.json", cik)
                 .retrieve()
                 .bodyToMono(String.class)
-                .flatMapIterable(this::parseFilings);
+                .flatMapIterable(this::parseFilingsList);
     }
 
     /**
      * Downloads a specific company filing.
-     * 
+     *
      * @param metadata Filing metadata containing the information needed to download
      * @return Mono containing the CompanyFilingDto with filing content
      */
@@ -88,12 +88,16 @@ public class DownloadService {
         var cik = removeLeadingZeroesFromCik(metadata.cik());
         var accessionNumber = metadata.accessionNumber().replace("-", "");
         var filename = metadata.primaryDocument();
+        return execFilingRequest(cik, accessionNumber, filename)
+                .map(dataBuffer -> new CompanyFilingDto(metadata, dataBuffer.asInputStream()));
+    }
+
+    protected Mono<DataBuffer> execFilingRequest(String cik, String accessionNumber, String filename) {
         return webClient.get()
                 .uri(SEC_BASE + "/Archives/edgar/data/{cik}/{accessionNumber}/{filename}", cik, accessionNumber, filename)
                 .retrieve()
                 .bodyToFlux(DataBuffer.class)
-                .reduce(DataBuffer::write)
-                .map(dataBuffer -> new CompanyFilingDto(metadata, dataBuffer.asInputStream()));
+                .reduce(DataBuffer::write);
     }
 
     private String removeLeadingZeroesFromCik(String cik) {
@@ -108,7 +112,7 @@ public class DownloadService {
         return cikBuilder.toString();
     }
 
-    protected List<CompanyFilingMetadataDto> parseFilings(String rawResponse) {
+    protected List<CompanyFilingMetadataDto> parseFilingsList(String rawResponse) {
         try {
             JsonNode root = objectMapper.readTree(rawResponse);
             JsonNode recent = root.path("filings").path("recent");
@@ -197,6 +201,7 @@ public class DownloadService {
         rawResponse = rawResponse.trim();
         return rawResponse.replaceAll("\\s+", " ");
     }
+
     /*
         The tickers come as valid, but rather strangely formatted JSON.
         All fields are in an array, in a certain order, but without any

@@ -3,8 +3,6 @@ package io.github.ckmuun.edgar4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 import static io.github.ckmuun.edgar4j.Constants.TEN_K_FORM;
 
 /**
@@ -14,17 +12,17 @@ import static io.github.ckmuun.edgar4j.Constants.TEN_K_FORM;
  */
 public class EdgarService {
 
-    private final DownloadService downloadService;
+    private final FilingService filingService;
     private final ParsingService parsingService;
 
     /**
      * Creates a new EdgarService with the provided services.
      * 
-     * @param downloadService Service for downloading SEC data
+     * @param filingService Service for downloading SEC data
      * @param parsingService Service for parsing SEC filings
      */
-    public EdgarService(DownloadService downloadService, ParsingService parsingService) {
-        this.downloadService = downloadService;
+    public EdgarService(FilingService filingService, ParsingService parsingService) {
+        this.filingService = filingService;
         this.parsingService = parsingService;
     }
 
@@ -34,7 +32,7 @@ public class EdgarService {
      * @param userAgent User agent to use for SEC API requests (should be a real email for production)
      */
     public EdgarService(String userAgent) {
-        this.downloadService = new DownloadService(userAgent);
+        this.filingService = new FilingService(userAgent);
         this.parsingService = new ParsingService();
     }
 
@@ -43,7 +41,7 @@ public class EdgarService {
      * Note: For production use, provide a real email address as the user agent.
      */
     public EdgarService() {
-        this.downloadService = new DownloadService();
+        this.filingService = new FilingService();
         this.parsingService = new ParsingService();
     }
 
@@ -54,15 +52,15 @@ public class EdgarService {
      * @return Mono containing a list of parsed EdgarDocument objects from the latest 10-K filing
      */
     public Mono<Document> loadLatest10KForTicker(String ticker) {
-        return downloadService
+        return filingService
                 .getCompanyTickers()
                 .filter(dto -> dto.ticker().equalsIgnoreCase(ticker))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Ticker not found: " + ticker)))
-                .flatMap(dto -> downloadService.getCompanyFilings(dto.cik()))
+                .flatMap(dto -> filingService.getCompanyFilings(dto.cik()))
                 .filter(filingDto -> filingDto.form().equals(TEN_K_FORM))
                 .take(1) // Get the most recent 10-K
-                .flatMap(downloadService::getCompanyFiling)
-                .map(parsingService::convertEdgarFormToDocument)
+                .flatMap(filingService::getCompanyFiling)
+                .map(parsingService::parseEdgarForm)
                 .single();
     }
 
@@ -74,13 +72,13 @@ public class EdgarService {
      * @return Mono containing a list of parsed EdgarDocument objects
      */
     public Mono<Document> load10KByCikAndAccessionNumber(String cik, String accessionNumber) {
-        return downloadService
+        return filingService
                 .getCompanyFilings(cik)
                 .filter(filingDto -> filingDto.accessionNumber().equals(accessionNumber))
                 .filter(filingDto -> filingDto.form().equals(TEN_K_FORM))
                 .take(1)
-                .flatMap(downloadService::getCompanyFiling)
-                .map(parsingService::convertEdgarFormToDocument)
+                .flatMap(filingService::getCompanyFiling)
+                .map(parsingService::parseEdgarForm)
                 .single();
     }
 
@@ -90,7 +88,7 @@ public class EdgarService {
      * @return Flux of CompanyTickerDto objects
      */
     public Flux<CompanyTickerDto> getTickers() {
-        return downloadService.getCompanyTickers();
+        return filingService.getCompanyTickers();
     }
 
     /**
@@ -100,11 +98,11 @@ public class EdgarService {
      * @return Flux of CompanyFilingMetadataDto objects
      */
     public Flux<CompanyFilingMetadataDto> getFilingsByTicker(String ticker) {
-        return downloadService
+        return filingService
                 .getCompanyTickers()
                 .filter(dto -> dto.ticker().equalsIgnoreCase(ticker))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Ticker not found: " + ticker)))
-                .flatMap(dto -> downloadService.getCompanyFilings(dto.cik()));
+                .flatMap(dto -> filingService.getCompanyFilings(dto.cik()));
     }
 
     /**
@@ -114,7 +112,7 @@ public class EdgarService {
      * @return Flux of CompanyFilingMetadataDto objects
      */
     public Flux<CompanyFilingMetadataDto> getFilingsByCik(String cik) {
-        return downloadService.getCompanyFilings(cik);
+        return filingService.getCompanyFilings(cik);
     }
 
     /**
@@ -135,8 +133,8 @@ public class EdgarService {
      * @return Mono containing a list of parsed EdgarDocument objects
      */
     public Mono<Document> downloadAndParseFiling(CompanyFilingMetadataDto metadata) {
-        return downloadService
+        return filingService
                 .getCompanyFiling(metadata)
-                .map(parsingService::convertEdgarFormToDocument);
+                .map(parsingService::parseEdgarForm);
     }
 }

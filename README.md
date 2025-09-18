@@ -123,8 +123,8 @@ import io.github.ckmuun.edgar4j.WebClientFactory;
 import org.springframework.web.reactive.function.client.WebClient;
 
 WebClient customClient = WebClientFactory.createWebClient("your-email@example.com");
-EdgarDownloadService downloadService = new EdgarDownloadService(customClient);
-EdgarService service = new EdgarService(downloadService, new EdgarParsingService());
+EdgarDownloadService filingService = new EdgarDownloadService(customClient);
+EdgarService service = new EdgarService(filingService, new EdgarParsingService());
 ```
 
 ## Document Structure

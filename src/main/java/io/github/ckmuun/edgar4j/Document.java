@@ -2,7 +2,6 @@ package io.github.ckmuun.edgar4j;
 
 import lombok.Getter;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,16 +12,15 @@ import java.util.stream.Collectors;
  * A document consists of one or more content chunks and associated metadata.
  */
 @Getter
-public class Document {
-    private final List<DocumentChunk> chunks;
-    private final Map<String, Object> metadata;
-
+public record Document(DocumentChunk xbrlHeader, List<DocumentChunk> chunks, Map<String, Object> metadata) {
     /**
      * Creates a new Document with the given chunks and metadata.
-     * @param chunks the list of content chunks
+     *
+     * @param chunks   the list of content chunks
      * @param metadata the metadata for the document
      */
-    public Document(List<DocumentChunk> chunks, Map<String, Object> metadata) {
+    public Document(DocumentChunk xbrlHeader, List<DocumentChunk> chunks, Map<String, Object> metadata) {
+        this.xbrlHeader = xbrlHeader;
         if (chunks == null) {
             this.chunks = List.of();
         } else {

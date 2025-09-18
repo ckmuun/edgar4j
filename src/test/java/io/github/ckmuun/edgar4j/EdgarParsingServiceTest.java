@@ -116,7 +116,7 @@ class EdgarParsingServiceTest {
     }
 
     @Test
-    void testConvertEdgarFormToDocument() {
+    void testParseEdgarForm() {
         String htmlContent = """
             <html>
                 <ix:header>
@@ -145,8 +145,8 @@ class EdgarParsingServiceTest {
                 new ByteArrayInputStream(htmlContent.getBytes())
         );
 
-        var document = parsingService.convertEdgarFormToDocument(filing);
-        var documents = document.getChunks();
+        var document = parsingService.parseEdgarForm(filing);
+        var documents = document.chunks();
 
         // Should have XBRL header + form items
         assertTrue(documents.size() >= 2);
@@ -173,7 +173,7 @@ class EdgarParsingServiceTest {
     }
 
     @Test
-    void testConvertEdgarFormToDocuments_UnsupportedForm() {
+    void testParseEdgarFormToDocuments_UnsupportedForm() {
         CompanyFilingMetadataDto metadata = CompanyFilingMetadataDto.builder()
                 .form("8-K")
                 .build();
@@ -185,7 +185,7 @@ class EdgarParsingServiceTest {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> parsingService.convertEdgarFormToDocument(filing)
+                () -> parsingService.parseEdgarForm(filing)
         );
 
         assertTrue(exception.getMessage().contains("Currently only 10-K forms supported"));

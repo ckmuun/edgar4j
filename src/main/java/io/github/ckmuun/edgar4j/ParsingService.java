@@ -34,9 +34,7 @@ public class ParsingService {
      * @return List of EdgarDocument objects containing parsed content
      * @throws IllegalArgumentException if the form type is not supported
      */
-    public Document convertEdgarFormToDocument(CompanyFilingDto companyFilingDto) {
-        List<DocumentChunk> chunks = new ArrayList<>();
-
+    public Document parseEdgarForm(CompanyFilingDto companyFilingDto) {
         org.jsoup.nodes.Document htmlDocument;
         try {
             htmlDocument = Jsoup.parse(companyFilingDto.file(), "UTF-8", "");
@@ -54,17 +52,13 @@ public class ParsingService {
         // Add XBRL header as a chunk
         Map<String, Object> xbrlMetadata = new HashMap<>(metadata);
         xbrlMetadata.put("documentType", "XBRL_HEADER");
-        chunks.add(new DocumentChunk(new String(xbrl, StandardCharsets.UTF_8), xbrlMetadata));
+        var xbrlHeader = new DocumentChunk(new String(xbrl, StandardCharsets.UTF_8), xbrlMetadata);
 
-        // Parse form items - currently only 10-K supported
-        if (!companyFilingDto.metadata().form().equals(TEN_K_FORM)) {
-            throw new IllegalArgumentException("Currently only %s forms supported".formatted(TEN_K_FORM));
-        }
-
-        var formItemChunks = getFormItemsFromHtml(htmlDocument, Pattern.compile(FORM_10K_ITEMS_REGEX), metadata);
-        chunks.addAll(formItemChunks);
-
-        return new Document(chunks, metadata);
+        return switch (companyFilingDto.metadata().form()) {
+            case TEN_K_FORM -> new Document(xbrlHeader, getFormItemsFromHtml(htmlDocument, TEN_K_ITEMS_REGEX, metadata), metadata);
+            case TEN_Q_FORM -> new Document(xbrlHeader, getFormItemsFromHtml(htmlDocument, TEN_Q_ITEMS_REGEX, metadata), metadata);
+            default -> throw new IllegalArgumentException("Currently only %s forms supported".formatted(TEN_K_FORM));
+        };
     }
 
     /**
